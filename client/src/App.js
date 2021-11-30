@@ -21,6 +21,7 @@ import axios from 'axios';
 import ImageUpload from './ImageUpload';
 import CategoryIcon from '@material-ui/icons/Category';
 import Category from './Category'
+import { invalid } from "moment";
 function getModalStyle() {
   const top = 50;
   const left = 50;
@@ -72,6 +73,9 @@ function App() {
   const [userName, setUsername] = useState("");
   const [fullName, setfullname] = useState("");
   const [password, setPassword] = useState("");
+  const [not, setNot] = useState("");
+
+  const [not1, setNot1] = useState("");
   const [email, setEmail] = useState("");
   const [state, setState] = useState('Home')
   const [categorydata, setCategoryData] = useState([])
@@ -132,65 +136,88 @@ function App() {
   }
 
   const signUp = (event) => {
+
     event.preventDefault();
-    fetch("/signup", {
-      method: "Post",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        userName,
-        fullName,
-        email,
-        password,
+    if (!userName || !fullName || !email || !password) {
+      setNot1("not null")
+      return
 
-      })
-    }).then(res => res.json())
-      .then(data => {
-        console.log(data);
-        if (data.error) {
-          M.toast({ html: data.error, classes: "#c62828 red darken-3" })
-        }
-        else {
+    } else {
+      if (!/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(email)) {
+        toast("invalid email")
+        return
+      }
+      fetch("/signup", {
+        method: "Post",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          userName,
+          fullName,
+          email,
+          password,
 
+        })
+      }).then(res => res.json())
+        .then(data => {
+          console.log(data);
+          if (data.error) {
+            M.toast({ html: data.error, classes: "#c62828 red darken-3" })
+          }
+          else {
 
-          notify();
-          // history.push('/signin')
-        }
-      }).catch(err => [
-        console.log(err)
-      ])
+            setNot(null)
+            notify();
+            // history.push('/signin')
+          }
+        }).catch(err => [
+          console.log(err)
+        ])
+
+    }
 
   };
-  const notify = () => toast("Wow so easy!");
+  const notify = () => toast("Success!");
   const signIn = (event) => {
-    event.preventDefault();
-    fetch("/login", {
-      method: "Post",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        email,
-        password
-      })
-    }).then(res => res.json())
-      .then(data => {
-        console.log(data)
-        if (data.error) {
-          M.toast({ html: data.error, classes: "#c62828 red darken-3" })
-        }
-        else {
-          localStorage.setItem("jwt", data.data.token)
-          localStorage.setItem("user", JSON.stringify(data.data.user.userId))
-          localStorage.setItem("userName", JSON.stringify(data.data.user.userName))
-          notify();
-          // history.push('/')
-        }
-      }).catch(err => {
-        console.log(err)
-      })
 
+    event.preventDefault();
+    if (!email || !password) {
+      setNot("not null")
+      return
+
+    } else {
+      if (!/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(email)) {
+        toast("invalid email")
+        return
+      }
+      fetch("/login", {
+        method: "Post",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          email,
+          password
+        })
+      }).then(res => res.json())
+        .then(data => {
+          console.log(data)
+          if (data.error) {
+            M.toast({ html: data.error, classes: "#c62828 red darken-3" })
+          }
+          else {
+            localStorage.setItem("jwt", data.data.token)
+            localStorage.setItem("user", JSON.stringify(data.data.user.userId))
+            localStorage.setItem("userName", JSON.stringify(data.data.user.userName))
+            setNot(null)
+            notify();
+            // history.push('/')
+          }
+        }).catch(err => {
+          console.log(err)
+        })
+    }
   };
   const renderHome = () => {
     return (
@@ -320,6 +347,13 @@ function App() {
               onChange={(e) => setPassword(e.target.value)}
               className="signup_input"
             />
+            {not1 ?
+              <div>
+                <h4>"please fill all the fields"</h4>
+              </div> :
+              <div>
+
+              </div>}
 
 
 
@@ -367,6 +401,13 @@ function App() {
               onChange={(e) => setPassword(e.target.value)}
               className="signup_input"
             />
+            {not ?
+              <div>
+                <h4>"please fill all the fields"</h4>
+              </div> :
+              <div>
+
+              </div>}
 
             <Button type="submit" onClick={signIn} variant="contained" color="secondary">
               Sign In
@@ -403,11 +444,19 @@ function App() {
           </form>
         </div>
 
-        <div className="header_icons">
-          <HomeOutlinedIcon fontSize="large" onClick={() => setState('Home')} className="header_icon" />
-          <PersonOutlinedIcon fontSize="large" onClick={() => setState('Profile')} className="header_icon" />
-          <CategoryIcon fontSize="large" onClick={() => setState('Category')} className="header_icon" />
-        </div>
+
+        {localStorage.getItem('user') ?
+          <div className="header_icons">
+            <HomeOutlinedIcon fontSize="large" onClick={() => setState('Home')} className="header_icon" />
+            <PersonOutlinedIcon fontSize="large" onClick={() => setState('Profile')} className="header_icon" />
+            <CategoryIcon fontSize="large" onClick={() => setState('Category')} className="header_icon" />
+          </div>
+          :
+          <div className="header_icons">
+            <HomeOutlinedIcon fontSize="large" onClick={() => setState('Home')} className="header_icon" />
+            <CategoryIcon fontSize="large" onClick={() => setState('Category')} className="header_icon" />
+          </div>}
+
 
         <div className="signupButton" >
           {localStorage.getItem('user') ? (

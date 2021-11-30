@@ -22,20 +22,24 @@ function Profile() {
     const [image, setImage] = useState("")
 
     useEffect(() => {
-        fetch('/profileposts', {
-            method: "GET",
-            headers: {
-                "Authorization": "Bearer " + localStorage.getItem("jwt")
-            }
-        })
-            .then(res => res.json())
-            .then(result => {
-                console.log(result.data);
-                setProfile(result.data.profilePosts[0])
-                setImage(result.data.profilePosts[0].image)
-
-
+        try {
+            fetch('/profileposts', {
+                method: "GET",
+                headers: {
+                    "Authorization": "Bearer " + localStorage.getItem("jwt")
+                }
             })
+                .then(res => res.json())
+                .then(result => {
+                    console.log(result);
+                    setProfile(result.data.profilePosts[0])
+                    setImage(result.data.profilePosts[0].image)
+
+                })
+        } catch (e) {
+            console.log(e)
+        }
+
 
 
 
